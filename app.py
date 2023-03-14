@@ -5,26 +5,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 import datetime
 from functools import wraps
+from models.user import User
+from db import db
 
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = 'thisissecret'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database/db.sqlite3'
 
-db = SQLAlchemy(app)
-
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    public_id = db.Column(db.String(50), unique=True)
-    name = db.Column(db.String(50))
-    password = db.Column(db.String(80))
-    admin = db.Column(db.Boolean)
-
-class Todo(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    text = db.Column(db.String(50))
-    complete = db.Column(db.Boolean)
-    user_id = db.Column(db.Integer)
+db.init_app(app)
 
 def token_required(f):
     @wraps(f)
@@ -48,11 +37,8 @@ def token_required(f):
     return decorated
 
 @app.route('/user', methods=['GET'])
-@token_required
-def get_all_users(current_user):
 
-    if not current_user.admin:
-        return jsonify({'message' : 'Cannot perform that function'})
+def get_all_users():
 
     users = User.query.all()
 
